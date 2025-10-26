@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suppa-Chat web</title>
+  <!-- Created by NTSandi -->
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <!-- Emoji Picker CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/index.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- Created by NTSandi -->
+  <!-- Login Page -->
+  <div class="login-container" id="loginPage">
+    <div class="login-box">
+      <h1 class="login-title">Suppa-Chat</h1>
+      <p class="login-subtitle">Connect with friends and family instantly</p>
+      
+      <!-- Login Form -->
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        
+        <button type="submit" class="login-btn" id="loginBtn">Log In</button>
+        
+        <div class="error-message" id="loginError"></div>
+        
+        <div class="form-toggle">
+          Don't have an account? <span class="toggle-link" id="showRegister">Sign Up</span>
+        </div>
+      </form>
+      
+      <!-- Register Form -->
+      <form class="login-form" id="registerForm" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="registerName">Full Name</label>
+          <input type="text" class="form-input" id="registerName" placeholder="Enter your full name" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="registerEmail">Email</label>
+          <input type="email" class="form-input" id="registerEmail" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="registerPassword">Password</label>
+          <input type="password" class="form-input" id="registerPassword" placeholder="Create a password (min. 6 characters)" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="registerConfirmPassword">Confirm Password</label>
+          <input type="password" class="form-input" id="registerConfirmPassword" placeholder="Confirm your password" required>
+        </div>
+        
+        <button type="submit" class="login-btn" id="registerBtn">Create Account</button>
+        
+        <div class="error-message" id="registerError"></div>
+        <div class="success-message" id="registerSuccess"></div>
+        
+        <div class="form-toggle">
+          Already have an account? <span class="toggle-link" id="showLogin">Log In</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App - Initially hidden -->
+  <main id="mainApp" style="display: none;">
+    <section class="chat">
+      <!-- Voice Recording Container -->
+      <div class="voice-recording-container" id="voiceRecordingContainer">
+        <div class="recording-indicator">
+          <div class="recording-dot"></div>
+          <div class="recording-time" id="recordingTime">00:00</div>
+        </div>
+        <div class="recording-controls">
+          <button class="recording-btn send" id="sendRecordingBtn">Send</button>
+          <button class="recording-btn cancel" id="cancelRecordingBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Emoji Picker -->
+      <div class="emoji-picker-container" id="emojiPickerContainer">
+        <emoji-picker id="emojiPicker"></emoji-picker>
+      </div>
+
+      <div class="chat__header">
+        <div class="chat__header-all">
+          <img id="currentChatAvatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMjU2IDBDMTE0LjYgMCAwIDExNC42IDAgMjU2czExNC42IDI1NiAyNTYgMjU2czI1Ni0xMTQuNiAyNTYtMjU2UzM5Ny40IDAgMjU2IDB6TTI1NiA0NDhjLTEwNiAwLTE5Mi04Ni0xOTItMTkyczg2LTE5MiAxOTItMTkyczE5MiA4NiAxOTIgMTkyUzM2MiA0NDggMjU2IDQ0OHoiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjE2MCIgZmlsbD0iI2ZmYzEwNyIvPjxjaXJjbGUgY3g9IjE5MiIgY3k9IjE5MiIgcj0iMjQiIGZpbGw9IiNmZmYiLz48Y2lyY2xlIGN4PSIzMjAiIGN5PSIxOTIiIHI9IjI0IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTIwOCAzMTRjMCA0NCA0OCA4MCA5NiA4MHM5Ni0zNiA5Ni04MGMwLTE2LTE2LTE2LTE5Mi0xNkMyMjQgMjk4IDIwOCAyOTggMjA4IDMxNFoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=" class="chat__header-image">
+          <div class="chat__header-contact">
+            <p class="chat__header-name" id="currentChatName">Public Chat</p>
+            <p class="chat__header-status" id="currentChatStatus">Online</p>
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+              <span id="typingUser">Someone</span> is typing
+              <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chat__header-icons">
+          <div class="dropdown-menu">
+            <button class="dropdown-toggle">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path d="M0 88C0 74.75 10.75 64 24 64H424C437.3 64 448 74.75 448 88C448 101.3 437.3 112 424 112H24C10.75 112 0 101.3 0 88zM0 248C0 234.7 10.75 224 24 224H424C437.3 224 448 234.7 448 248C448 261.3 437.3 272 424 272H24C10.75 272 0 261.3 0 248zM424 432H24C10.75 432 0 421.3 0 408C0 394.7 10.75 384 24 384H424C437.3 384 448 394.7 448 408C448 421.3 437.3 432 424 432z"/>
+              </svg>
+            </button>
+            <div class="dropdown-content" id="dropdownMenu">
+              <button class="dropdown-item" id="aboutButton">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                  <path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7-24-24-24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-144c-17.7 0-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32s-14.3 32-32 32z"/>
+                </svg>
+                About
+              </button>
+              <button class="dropdown-item" id="logoutButton">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                  <path d="M160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96C43 32 0 75 0 128V384c0 53 43 96 96 96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H96c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32h64zM504.5 273.4c4.8-4.5 7.5-10.8 7.5-17.4s-2.7-12.9-7.5-17.4l-144-136c-7-6.6-17.2-8.4-26-4.6s-14.5 12.5-14.5 22v72H192c-17.7 0-32 14.3-32 32l0 64c0 17.7 14.3 32 32 32H320v72c0 9.6 5.7 18.2 14.5 22s19 2 26-4.6l144-136z"/>
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat__main" id="chatMessages">
+        <!-- Loading animation will be inserted here -->
+      </div>
+      <div class="chat__action">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="chat__action-emoji" id="emojiButton">
+          <path d="M130.7 313.9C126.5 300.4 137.8 288 151.1 288H364.5C378.7 288 389.9 300.4 385.8 313.9C368.1 368.4 318.2 408 258.2 408C198.2 408 147.5 368.4 130.7 313.9V313.9zM208.4 192C208.4 209.7 194 224 176.4 224C158.7 224 144.4 209.7 144.4 192C144.4 174.3 158.7 160 176.4 160C194 160 208.4 174.3 208.4 192zM304.4 192C304.4 174.3 318.7 160 336.4 160C354 160 368.4 174.3 368.4 192C368.4 209.7 354 224 336.4 224C318.7 224 304.4 209.7 304.4 192zM512 256C512 397.4 397.4 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256zM256 48C141.1 48 48 141.1 48 256C48 370.9 141.1 464 256 464C370.9 464 464 370.9 464 256C464 141.1 370.9 48 256 48z"/>
+        </svg>
+        <input type="text" class="chat__action-input" id="messageInput" placeholder="Type a message...">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="chat__action-send" id="sendButton">
+          <path d="M511.1 255.1c0 12.8-7.625 24.38-19.41 29.41L44.6 477.4c-4.062 1.75-8.344 2.594-12.59 2.594c-8.625 0-17.09-3.5-23.28-10.05c-9.219-9.766-11.34-24.25-5.344-36.27l73.66-147.3l242.1-30.37L77.03 225.6l-73.66-147.3C-2.623 66.3-.4982 51.81 8.72 42.05c9.25-9.766 23.56-12.75 35.87-7.453L492.6 226.6C504.4 231.6 511.1 243.2 511.1 255.1z"/>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" id="micButton">
+          <path d="M192 352c53.03 0 96-42.97 96-96v-160c0-53.03-42.97-96-96-96s-96 42.97-96 96v160C96 309 138.1 352 192 352zM344 192C330.7 192 320 202.7 320 215.1V256c0 73.33-61.97 132.4-136.3 127.7c-66.08-4.169-119.7-66.59-119.7-132.8L64 215.1C64 202.7 53.25 192 40 192S16 202.7 16 215.1v32.15c0 89.66 63.97 169.6 152 181.7V464H128c-18.19 0-32.84 15.18-31.96 33.57C96.43 505.8 103.8 512 112 512h160c8.222 0 15.57-6.216 15.96-14.43C288.8 479.2 274.2 464 256 464h-40v-33.77C301.7 418.5 368 344.9 368 256V215.1C368 202.7 357.3 192 344 192z"/>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <svg class="notification-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224s224-100.3 224-224S379.7 32 256 32zM256 416c-26.5 0-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48S282.5 416 256 416zM300 176c0 11.4-9.3 20.7-20.7 20.7h-46.6c-11.4 0-20.7-9.3-20.7-20.7l0 0c0-11.4 9.3-20.7 20.7-20.7h46.6C290.7 155.3 300 164.6 300 176L300 176z"/>
+    </svg>
+    <div class="notification-content">
+      <div class="notification-title" id="notificationTitle">New Message</div>
+      <div class="notification-message" id="notificationMessage">You have a new message</div>
+    </div>
+    <button class="notification-close" id="notificationClose">×</button>
+  </div>
+
+  <!-- About Modal -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">About Suppa-Chat</h2>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="about-section">
+          <h3 class="about-title">Welcome to Suppa-Chat!</h3>
+          <p class="about-text">
+            Suppa-Chat is a modern, real-time chat application that allows you to connect with friends and family instantly. 
+            Built with cutting-edge technology, our app provides a seamless messaging experience with a clean, intuitive interface.
+          </p>
+        </div>
+        
+        <div class="about-section">
+          <h3 class="about-title">Features</h3>
+          <ul class="feature-list">
+            <li>Real-time messaging with instant delivery</li>
+            <li>Voice message recording and sharing</li>
+            <li>Emoji picker for expressive conversations</li>
+            <li>Typing indicators to see when others are typing</li>
+            <li>Desktop notifications for new messages</li>
+            <li>Responsive design that works on all devices</li>
+            <li>Secure Firebase backend for reliable performance</li>
+            <li>Reply to specific messages</li>
+            <li>React to messages with emojis</li>
+          </ul>
+        </div>
+        
+        <div class="about-section">
+          <h3 class="about-title">How to Use</h3>
+          <p class="about-text">
+            Simply type your message in the input field and press Enter or click the send button. 
+            Use the microphone icon to record voice messages, and the emoji button to add emojis to your messages.
+            When someone is typing, you'll see a typing indicator below their name.
+            To reply to a message, long press on it and select "Reply". To react to a message, long press and select "React".
+          </p>
+        </div>
+        
+        <div class="about-section">
+          <h3 class="about-title">Created by NTSandi</h3>
+          <p class="about-text">
+            This application was created with passion and attention to detail. 
+            We hope you enjoy using Suppa-Chat as much as we enjoyed building it!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emoji Picker JS -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/index.js"></script>
+  <script src="app.js"></script>
+  <!-- Created by NTSandi -->
+</body>
+</html>
